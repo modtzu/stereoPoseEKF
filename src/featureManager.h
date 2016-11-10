@@ -1,0 +1,87 @@
+/*
+ * featureManager.h
+ *
+ *  Created on: Oct 12, 2016
+ *      Author: xwong
+ *
+ *      managing feature points:
+ *      	maintain feature storage
+ *      	extract feature
+ *      	track feature
+ *      	eject feature
+ *      	restart feature
+ *      	estimate feature covariance
+ */
+
+#ifndef FEATUREMANAGER_H_
+#define FEATUREMANAGER_H_
+
+#include "input.h"
+#include "imgFtRelated.h"
+
+#include "kltUncertainty.h"
+#include "utility.h"
+
+#include <memory>
+
+class featureManager {
+private:
+
+	std::shared_ptr<imgFtRelated> ptrFeature;
+	kltUncertainty KLTU;
+
+
+	std::vector<cv::KeyPoint> vctFt0L, vctFt0R;
+
+	std::vector<arma::mat> vctCovFt0L, vctCovFt0R;
+
+	std::vector<cv::Point2f> Pt0, Pt1;
+	std::vector<int> vctReID;
+	cv::Mat des0,des1;
+
+	float covTh;
+	int numOfFtTh;
+
+	cv::Mat imgL0, imgR0;
+
+public:
+	featureManager();
+
+
+	/*
+	 *@note constructor with covariance threshold and number of feature threshold setting
+	 *@param covTh covariance threshold to trigger feature rejection
+	 *@param numOfFt maximum number of feature allowed
+	 */
+	featureManager(float covTh, int numOfFt);
+
+	/*
+	 *@note extract feature from Left image and search for set of corresponding feature in Right Image
+	 *@param imgL left image -> save as imgL0
+	 *@param imgR right image -> save as imgR0
+	 *@return number of feature
+	 */
+	int initFeaturePair(cv::Mat imgL, cv::Mat imgR);
+
+	/*
+	 *@note track feature from imgL0 to imgL, imgR0 to imgR
+	 *@param imgL left image -> replace imgL0 after tracking
+	 *@param imgR right image -> replace imgR0 after tracking
+	 *@param ejectID -> vector of ejected feature index
+	 */
+	int updateFeature(cv::Mat imgL, cv::Mat imgR, std::vector<int>& ejectID);
+
+	/*
+	 *@note get feature points pair for key point computation
+	 *@param ptrFtL a pointer to storage of left image feature
+	 *@param ptrFtR a pointer to storage of right image feature
+	 *@param ptrCovFtL a pointer to storage of left image feature covariance
+	 *@param ptrCovFtR a pointer to storage of right image feature covariance
+	 */
+	void getFeaturePair(std::vector<cv::KeyPoint>* ptrFtL, std::vector<cv::KeyPoint>* ptrFtR,
+							std::vector<arma::mat>* ptrCovFtL, std::vector<arma::mat>* ptrCovFtR);
+
+	virtual ~featureManager();
+};
+
+#endif /* FEATUREMANAGER_H_ */

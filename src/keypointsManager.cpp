@@ -1,0 +1,133 @@
+/*
+ * keypointsManager.cpp
+ *
+ *  Created on: Oct 14, 2016
+ *      Author: xwong
+ */
+
+#include "keypointsManager.h"
+
+//keypointsManager::keypointsManager() {
+//	// TODO Auto-generated constructor stub
+//
+//}
+
+void keypointsManager::update(std::vector<cv::KeyPoint>* ptrVctFtL,
+								std::vector<cv::KeyPoint>* ptrVctFtR,
+								std::vector<arma::mat>* ptrVctCovFtL,
+								std::vector<arma::mat>*  ptrVctCovFtR,
+								std::vector<int>* ptrRmvID,
+								bool resetFlg) {
+
+	if(resetFlg)
+	{
+		vctPkm1.clear();
+		vctPkm2.clear();
+		vctPkm3.clear();
+		vctCovPkm1.clear();
+		vctCovPkm2.clear();
+		vctCovPkm3.clear();
+	}
+	else
+	{
+		updateStorage(ptrRmvID);
+
+		vctPkm3 = vctPkm2;
+		vctPkm2 = vctPkm1;
+		vctPkm1 = vctPk;
+
+		vctCovPkm3 = vctCovPkm2;
+		vctCovPkm2 = vctCovPkm1;
+		vctCovPkm1 = vctCovPk;
+	}
+
+	strSolver.computeDepthWtCov(ptrVctFtL,ptrVctFtR,vctPk,ptrVctCovFtL,ptrVctCovFtR,vctCovPk);
+
+//	for(int i=0; i < vctCovPk.size(); i++)
+//	{
+//		vctCovPk[i].print("covPk");
+//	}
+
+
+}
+
+bool keypointsManager::getVctPk(std::vector<cv::Vec3f>& vctP,
+		std::vector<arma::mat>& vctCovP) {
+
+	if(vctPk.empty())
+		return false;
+
+	vctP = vctPk;
+	vctCovP = vctCovPk;
+
+	return true;
+
+}
+
+bool keypointsManager::getVctPkm1(std::vector<cv::Vec3f>& vctP,
+		std::vector<arma::mat>& vctCovP) {
+
+	if(vctPkm1.empty())
+		return false;
+
+	vctP = vctPkm1;
+	vctCovP = vctCovPkm1;
+
+	return true;
+
+}
+
+bool keypointsManager::getVctPkm2(std::vector<cv::Vec3f>& vctP,
+		std::vector<arma::mat>& vctCovP) {
+
+	if(vctPkm2.empty())
+		return false;
+
+	vctP = vctPkm2;
+	vctCovP = vctCovPkm2;
+
+	return true;
+
+}
+
+bool keypointsManager::getVctPkm3(std::vector<cv::Vec3f>& vctP,
+		std::vector<arma::mat>& vctCovP) {
+
+	if(vctPkm3.empty())
+		return false;
+
+	vctP = vctPkm3;
+	vctCovP = vctCovPkm3;
+
+	return true;
+
+}
+
+
+void keypointsManager::updateStorage(std::vector<int>* ptrRmvID) {
+
+	int RC = ptrRmvID->size();
+
+	for(int i=0 ; i < RC; i++)
+	{
+			int idToRemove = ptrRmvID->at(RC - i - 1);
+
+			if(!vctPk.empty())
+				vctPk.erase(vctPk.begin()+idToRemove);
+
+			if(!vctPkm1.empty())
+				vctPkm1.erase(vctPkm1.begin()+idToRemove);
+
+			if(!vctPkm2.empty())
+				vctPkm2.erase(vctPkm2.begin()+idToRemove);
+
+			if(!vctPkm3.empty())
+				vctPkm3.erase(vctPkm3.begin()+idToRemove);
+	}
+
+}
+
+
+keypointsManager::~keypointsManager() {
+	// TODO Auto-generated destructor stub
+}
