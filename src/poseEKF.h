@@ -18,6 +18,7 @@ class poseEKF {
 private:
 
 	utility UT;
+
 	ppTransEst ppT;
 
 	arma::mat Xk;
@@ -32,10 +33,13 @@ public:
 
 	bool propagate(arma::mat matA, arma::mat matB, arma::mat SigmaA, arma::mat SigmaB, double dt,arma::mat& propX, arma::mat& propSigmaX);
 
-	void update(arma::mat Xkp, arma::mat SigKp, std::vector<arma::mat> vctPk,std::vector<arma::mat> vctSigPk,
-			std::vector<arma::mat> vctPkm1, arma::mat& Xk, arma::mat& SigXk);
+	void update(arma::mat Xkp, arma::mat SigKp, std::vector<cv::Vec3f> vctPk,std::vector<arma::mat> vctSigPk,
+			std::vector<cv::Vec3f> vctPkm1, arma::mat& Xk, arma::mat& SigXk);
 
-	arma::mat jacobianMat(arma::mat q,  std::vector<arma::mat> vctPk);
+
+	void updateMkII(arma::mat Xkp, arma::mat SigXp, arma::mat Xm, arma::mat SigXm, arma::mat& Xk, arma::mat& SigXk);
+
+	arma::mat jacobianMat(arma::mat q,  std::vector<cv::Vec3f> vctPk);
 
 	virtual ~poseEKF();
 };

@@ -36,9 +36,9 @@ for(int yi = 0; yi < inputImg.rows; yi++)
 
 			case 3: /// RGB image
 
-				point.r = inputImg.at<cv::Vec3b>(yi,xi)[0];
+				point.b = inputImg.at<cv::Vec3b>(yi,xi)[0];
 				point.g = inputImg.at<cv::Vec3b>(yi,xi)[1];
-				point.b = inputImg.at<cv::Vec3b>(yi,xi)[2];
+				point.r = inputImg.at<cv::Vec3b>(yi,xi)[2];
 				point.a = 1;
 
 				break;

@@ -253,13 +253,13 @@ arma::mat ppTransEst::sigmaA2SigmaT(arma::mat sigmaA, double dt) {
 	{
 
 		SigmaT = sigmaA.submat(0,0,2,2) + sigmaA.submat(3,3,5,5)*dt*dt + sigmaA.submat(6,6,8,8)*pow(dt,4)/4
-					+ sigmaA.submat(0,3,2,5)*dt + sigmaA.submat(0,6,2,8)*dt*dt + sigmaA.submat(3,6,5,8)*pow(dt,3);
+					+ 2*sigmaA.submat(0,3,2,5)*dt + sigmaA.submat(0,6,2,8)*dt*dt + sigmaA.submat(3,6,5,8)*pow(dt,3)/2;
 
 	}
 	else if(sigmaA.n_cols > 5)
 	{
 		SigmaT = sigmaA.submat(0,0,2,2) + sigmaA.submat(3,3,5,5)*dt*dt
-					+ sigmaA.submat(0,3,2,5)*dt;
+					+ 2*sigmaA.submat(0,3,2,5)*dt;
 	}
 	else
 	{
@@ -277,14 +277,14 @@ arma::mat ppTransEst::sigmaB2SigmaQ(arma::mat sigmaB, double dt) {
 	{
 
 		SigmaQ = sigmaB.submat(0,0,2,2) + sigmaB.submat(3,3,5,5)*dt*dt + sigmaB.submat(6,6,8,8)*pow(dt,4)/4
-					+ sigmaB.submat(0,3,2,5)*dt + sigmaB.submat(0,6,2,8)*dt*dt + sigmaB.submat(3,6,5,8)*pow(dt,3);
+					+ 2*sigmaB.submat(0,3,2,5)*dt + sigmaB.submat(0,6,2,8)*dt*dt + sigmaB.submat(3,6,5,8)*pow(dt,3);
 
 
 	}
 	else if(sigmaB.n_cols > 5)
 	{
 		SigmaQ = sigmaB.submat(0,0,2,2) + sigmaB.submat(3,3,5,5)*dt*dt
-					+ sigmaB.submat(0,3,2,5)*dt;
+					+ 2*sigmaB.submat(0,3,2,5)*dt;
 
 	}
 	else
@@ -582,7 +582,7 @@ bool ppTransEst::solveLinear2ndOrderWtCov(std::vector<cv::Vec3f> Pt0,
 		H.submat(c,9,c+2,11)*=2*dt;
 	}
 
-	arma::mat X = -(H.t()*H).i()*H.t()*Pm;
+	arma::mat X = (H.t()*H).i()*H.t()*Pm;
 
 	arma::mat q = X.submat(0,0,2,0) + X.submat(3,0,5,0)*dt;
 
@@ -762,6 +762,13 @@ bool ppTransEst::solveLinear3rdOrderWtCov(std::vector<cv::Vec3f> Pt0,
 	Str[1] = Pt2;
 	Str[2] = Pt3;
 
+	std::vector<arma::mat> covStr[3];
+	covStr[0] = covPt1;
+	covStr[1] = covPt2;
+	covStr[2] = covPt3;
+
+	arma::mat W = arma::zeros(nP*3*3,nP*3*3);
+
 	for(int k = 0; k < 3; k++)
 	{
 			for(int i =0; i < nP; i++)
@@ -770,9 +777,13 @@ bool ppTransEst::solveLinear3rdOrderWtCov(std::vector<cv::Vec3f> Pt0,
 
 				int ord = k+1;
 
-				Pm(c,0) = Pt0[i][0] - Str[k][i][0];
+				Pm(c,0) =   Pt0[i][0] - Str[k][i][0];
 				Pm(c+1,0) = Pt0[i][1] - Str[k][i][1];
 				Pm(c+2,0) = Pt0[i][2] - Str[k][i][2];
+
+				W(c,c) = 1/sqrt(covPt0[i](0,0)*covPt0[i](0,0) + covStr[k][i](0,0)*covStr[k][i](0,0));
+				W(c+1,c+1) = 1/sqrt(covPt0[i](1,1)*covPt0[i](1,1) + covStr[k][i](1,1)*covStr[k][i](1,1));
+				W(c+2,c+2) = 1/sqrt(covPt0[i](2,2)*covPt0[i](2,2) + covStr[k][i](2,2)*covStr[k][i](2,2));
 
 				arma::mat pk(3,1);
 
@@ -791,10 +802,11 @@ bool ppTransEst::solveLinear3rdOrderWtCov(std::vector<cv::Vec3f> Pt0,
 
 				H.submat(c,12,c+2,14)*=(ord*dt);
 				H.submat(c,15,c+2,17)*=(ord*dt)*(ord*dt)*0.5;
+
 			}
 	}
 
-	arma::mat X = -(H.t()*H).i()*H.t()*Pm;
+	arma::mat X = (H.t()*W*H).i()*H.t()*W*Pm;
 
 	arma::mat q = X.submat(0,0,2,0) + X.submat(3,0,5,0)*dt + X.submat(6,0,8,0)*dt*dt*0.5;
 
@@ -827,8 +839,6 @@ bool ppTransEst::solveLinear3rdOrderWtCov(std::vector<cv::Vec3f> Pt0,
 	matB.col(0) = X.submat(0,0,2,0);
 	matB.col(1) = X.submat(3,0,5,0);
 	matB.col(2) = X.submat(6,0,8,0);
-
-
 
 	std::vector<std::vector<cv::Vec3f>> vctVctPt;
 	std::vector<std::vector<arma::mat>> vctVctCovPt;
@@ -888,7 +898,7 @@ bool ppTransEst::solveLinearWtCov(std::vector<cv::Vec3f> Pt0,
 
 	}
 
-	arma::mat X = -(H.t()*H).i()*H.t()*Pm;
+	arma::mat X = (H.t()*H).i()*H.t()*Pm;
 
 	arma::mat q = X.submat(0,0,2,0);
 

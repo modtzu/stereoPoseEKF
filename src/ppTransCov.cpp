@@ -103,7 +103,7 @@ bool ppTransCov::update(arma::mat matH, std::vector< std::vector<cv::Vec3f> > vc
 		d3 = x.submat(15,0,17,0);
 	}
 
-	arma::mat B = arma::eye(3,3) + UT.crossProductMat(b1.col(0)) + UT.crossProductMat(b2.col(0))*dt + + UT.crossProductMat(b1.col(0))*dt*dt/2;
+	arma::mat B = arma::eye(3,3) + UT.crossProductMat(b1.col(0)) + UT.crossProductMat(b2.col(0))*dt + UT.crossProductMat(b1.col(0))*dt*dt/2;
 	arma::mat Bi = B.i();
 
 	a1 = Bi*d1;
@@ -231,11 +231,6 @@ ppTransCov::~ppTransCov() {
 
 arma::mat ppTransCov::compdXdP(arma::mat H, std::vector<cv::Vec3f> vctPt,
 		arma::mat x, double dt, int tIndex, int numOfSt) {
-
-
-/// NEED A FIX ON HOW TO HANDLE CASE WHEN USING 1st and 2nd order model!!!!!!!!!!!!!!!
-/// massy indexing.....
-
 
 
 	/// Eta = P(k) - P(k-i)

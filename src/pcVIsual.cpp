@@ -123,6 +123,44 @@ bool pcVIsual::visualize(std::string winName,
 	return true;
 }
 
+void pcVIsual::addCamera2Window(std::string winName,std::string camName,
+		Eigen::Matrix4f transformMat) {
+
+//	Eigen::Matrix4f X0 = Eigen::Matrix4f::Identity();
+	Eigen::Vector4f X0;
+	X0(0) = 0;
+	X0(1) = 0;
+	X0(2) = 1;
+	X0(3) = 0;
+
+	X0 = transformMat*X0;
+
+	auto iter = std::find(vctWinName.begin(),vctWinName.end(),winName);
+
+	 if(iter != vctWinName.end())
+	 {
+		 int it = iter - vctWinName.begin();
+
+		 pcl::ModelCoefficients param;
+		 param.values.resize(7);
+		 ///pos
+		 param.values[0] = transformMat(0,3);
+		 param.values[1] = transformMat(1,3);
+		 param.values[2] = transformMat(2,3);
+
+		 ///att
+		 param.values[3] = X0(0);
+		 param.values[4] = X0(1);
+		 param.values[5] = X0(2);
+
+		 ///?
+		 param.values[6] = 10;
+
+		 vctPclVisualizerPtr[it]->addCone(param,camName);
+	 }
+
+}
+
 pcVIsual::~pcVIsual() {
 	// TODO Auto-generated destructor stub
 }
@@ -252,5 +290,29 @@ void pcVIsual::addPt2Window(std::string winName,
 		 int it = iter - vctWinName.begin();
 		 vctPclVisualizerPtr[it]->addPointCloud<pcl::PointXYZRGB> (pclPtr,ptName);
 	 }
+
+}
+
+void pcVIsual::saveWindowAsCOP(std::string winName) {
+
+	auto iter = std::find(vctWinName.begin(),vctWinName.end(),winName);
+
+	 if(iter != vctWinName.end())
+	 {
+		 int it = iter - vctWinName.begin();
+
+//		 vctPclVisualizerPtr[it]->addCone()
+
+//		 vctPclVisualizerPtr[it]->setBackgroundColor(1,1,1);
+//		 vctPclVisualizerPtr[it]->initCameraParameters();
+//
+//		 while (!vctPclVisualizerPtr[it]->wasStopped ())
+//		  {
+//			vctPclVisualizerPtr[it]->spinOnce (100);
+//		    boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+//		  }
+
+	 }
+
 
 }

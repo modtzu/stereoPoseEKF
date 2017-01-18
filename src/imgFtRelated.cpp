@@ -147,24 +147,24 @@ bool imgFtRelated::matchFeature(cv::Mat img1, cv::Mat img2,
 			}
 		}
 
-//		while(Ft0.size()<50)
-//		{
-//			auto smallest = std::min_element(std::begin(vctRemDist),std::end(vctRemDist));
-//			int ID = std::distance(std::begin(vctRemDist),smallest);
-//
-//			Ft0.push_back(kFt1[vctRemDist[ID].queryIdx].pt);
-//			Ft1.push_back(kFt2[vctRemDist[ID].trainIdx].pt);
-//
-//			tKpt1.push_back(kFt1[matched[ID].queryIdx]);
-//			tKpt2.push_back(kFt2[matched[ID].queryIdx]);
-//
-//			goodMatched.push_back(vctRemDist[ID]);
-//
-//			vctRemDist.erase(smallest);
-//
-//			if(vctRemDist.empty())
-//				break;
-//		}
+		while(Ft0.size()<50)
+		{
+			auto smallest = std::min_element(std::begin(vctRemDist),std::end(vctRemDist));
+			int ID = std::distance(std::begin(vctRemDist),smallest);
+
+			Ft0.push_back(kFt1[vctRemDist[ID].queryIdx].pt);
+			Ft1.push_back(kFt2[vctRemDist[ID].trainIdx].pt);
+
+			tKpt1.push_back(kFt1[matched[ID].queryIdx]);
+			tKpt2.push_back(kFt2[matched[ID].queryIdx]);
+
+			goodMatched.push_back(vctRemDist[ID]);
+
+			vctRemDist.erase(smallest);
+
+			if(vctRemDist.empty())
+				break;
+		}
 
 		if(Ft0.size()==0)
 		{
@@ -175,8 +175,8 @@ bool imgFtRelated::matchFeature(cv::Mat img1, cv::Mat img2,
 
 		cv::Mat img1C, img2C;
 
-		cv::cvtColor(img1,img1C,CV_GRAY2BGR);
-		cv::cvtColor(img2,img2C,CV_GRAY2BGR);
+//		cv::cvtColor(img1,img1C,CV_GRAY2BGR);
+//		cv::cvtColor(img2,img2C,CV_GRAY2BGR);
 
 //		std::cout<<goodMatched.size()<<"\n";
 //

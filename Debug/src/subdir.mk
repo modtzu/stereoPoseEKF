@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/KltWithCov.cpp \
+../src/dq2omega.cpp \
 ../src/featureManager.cpp \
 ../src/img2pcd.cpp \
 ../src/imgFtRelated.cpp \
@@ -14,6 +15,7 @@ CPP_SRCS += \
 ../src/main.cpp \
 ../src/pcVIsual.cpp \
 ../src/pclStereo.cpp \
+../src/plotData.cpp \
 ../src/poseEKF.cpp \
 ../src/ppTransCov.cpp \
 ../src/ppTransEst.cpp \
@@ -22,6 +24,7 @@ CPP_SRCS += \
 
 OBJS += \
 ./src/KltWithCov.o \
+./src/dq2omega.o \
 ./src/featureManager.o \
 ./src/img2pcd.o \
 ./src/imgFtRelated.o \
@@ -31,6 +34,7 @@ OBJS += \
 ./src/main.o \
 ./src/pcVIsual.o \
 ./src/pclStereo.o \
+./src/plotData.o \
 ./src/poseEKF.o \
 ./src/ppTransCov.o \
 ./src/ppTransEst.o \
@@ -39,6 +43,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./src/KltWithCov.d \
+./src/dq2omega.d \
 ./src/featureManager.d \
 ./src/img2pcd.d \
 ./src/imgFtRelated.d \
@@ -48,6 +53,7 @@ CPP_DEPS += \
 ./src/main.d \
 ./src/pcVIsual.d \
 ./src/pclStereo.d \
+./src/plotData.d \
 ./src/poseEKF.d \
 ./src/ppTransCov.d \
 ./src/ppTransEst.d \
@@ -59,7 +65,7 @@ CPP_DEPS += \
 src/%.o: ../src/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -D__GXX_EXPERIMENTAL_CXX0X__ -I/usr/local/include/vtk-5.10 -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	g++ -D__GXX_EXPERIMENTAL_CXX0X__ -I/usr/local/include/vtk-5.10 -I/home/xwong/Downloads/gnuIoStream/gnuplot-iostream -O0 -g3 -Wall -c -fmessage-length=0 -std=c++11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

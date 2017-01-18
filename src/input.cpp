@@ -28,8 +28,11 @@ bool input::update(cv::Mat& leftImg, cv::Mat& rightImg) {
 	LFileName += fileExtension;
 	RFileName += fileExtension;
 
-	cv::Mat Limg = cv::imread(LFileName,CV_LOAD_IMAGE_GRAYSCALE);
-	cv::Mat Rimg = cv::imread(RFileName,CV_LOAD_IMAGE_GRAYSCALE);
+//	cv::Mat Limg = cv::imread(LFileName,CV_LOAD_IMAGE_GRAYSCALE);
+//	cv::Mat Rimg = cv::imread(RFileName,CV_LOAD_IMAGE_GRAYSCALE);
+
+	cv::Mat Limg = cv::imread(LFileName);//,CV_LOAD_IMAGE_GRAYSCALE);
+	cv::Mat Rimg = cv::imread(RFileName);//,CV_LOAD_IMAGE_GRAYSCALE);
 
 //	std::cout<<"reading image : "<<LFileName<<", "<<RFileName<<"\n";
 
@@ -42,7 +45,7 @@ bool input::update(cv::Mat& leftImg, cv::Mat& rightImg) {
 	Limg.copyTo(leftImg);
 	Rimg.copyTo(rightImg);
 
-	sequenceCounter++;
+	sequenceCounter+=1;
 
 	return true;
 }

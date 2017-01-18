@@ -27,7 +27,7 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	vctCovFt0R.clear();
 
 
-	ptrFeature->getFeature(imgL,vctFt0L,des0,1);
+	ptrFeature->getFeature(imgL,vctFt0L,des0,0);
 
 	/// Establish key points correspondence in initial stereo pair with KLT tracker
 	ptrFeature->trackFeature(imgL,imgR,vctFt0L,vctFt0R,vctReID,cv::Size(20,20));
@@ -44,7 +44,7 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	for (int i = 0; i < dDes.rows; i++)
 	{
 		float d = cv::norm(dDes.row(i));
-		if(d < 100)
+		if(d < 200)
 		{
 			vctFt1L.push_back(vctFt0L[i]);
 			vctFt1R.push_back(vctFt0R[i]);
@@ -112,7 +112,7 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 			arma::mat initCov = vctCovFt0L[k];
 
 			arma::mat tCov = KLTU.kltCovLS(imgL0,imgLt,cv::Size(20,20),vctFt0L[k],vctFt1L[k],initCov,
-																cv::Size(5,5),
+																cv::Size(16,16),
 																1.6);
 
 			vctCovFt1L[k]=(tCov);
@@ -123,15 +123,19 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 			arma::eig_gen(eigVal,eigVec,tCov);
 			arma::mat eig = arma::real(eigVal);
 
-			if(eig(0,0)>covTh || eig(1,0) > covTh || eig(0,0)<= 0|| eig(1,0)<=0)
+			if(covTh > 0)
 			{
-				rmvID2.push_back(k);
-//				vctCovFt1L.push_back(tCov);
-			}
-			else
-			{
+				if(eig(0,0)>covTh || eig(1,0) > covTh || eig(0,0)<= 0|| eig(1,0)<=0)
+				{
+					rmvID2.push_back(k);
+	//				vctCovFt1L.push_back(tCov);
+				}
+				else
+				{
 
+				}
 			}
+
 		}
 
 
@@ -220,6 +224,7 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 			arma::eig_gen(eigVal,eigVec,tCov);
 			arma::mat eig = arma::real(eigVal);
 
+			if(covTh > 0)
 			if(eig(0,0)>covTh || eig(1,0) > covTh || eig(0,0)<= 0|| eig(1,0)<=0)
 			{
 				rmvID3.push_back(k);

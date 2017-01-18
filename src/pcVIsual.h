@@ -47,7 +47,11 @@ public:
 
 	void addPt2Window(std::string winName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclPtr, std::string ptName, Eigen::Matrix4f transformMat = Eigen::Matrix4f::Identity());
 
+	void addCamera2Window(std::string winName,std::string camName, Eigen::Matrix4f transformMat = Eigen::Matrix4f::Identity());
+
 	void showWindow(std::string winName);
+
+	void saveWindowAsCOP(std::string winName);
 
 	virtual ~pcVIsual();
 };

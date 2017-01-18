@@ -20,10 +20,16 @@ private:
 	stereoSolver strSolver;
 
 	/// keyPoints storage
-	std::vector<cv::Vec3f> vctPk,vctPkm1,vctPkm2, vctPkm3;
+//	std::vector<cv::Vec3f> vctPk,vctPkm1,vctPkm2, vctPkm3;
+
+
+	std::vector<cv::Vec3f> vctPkStr[4];
+
 
 	/// keypoints covariance storage
-	std::vector<arma::mat> vctCovPk,vctCovPkm1,vctCovPkm2,vctCovPkm3;
+//	std::vector<arma::mat> vctCovPk,vctCovPkm1,vctCovPkm2,vctCovPkm3;
+
+	std::vector<arma::mat> vctCovPkStr[4];
 
 	utility UT;
 public:
@@ -79,6 +85,11 @@ public:
 	 *@return false if do not exist
 	 */
 	bool getVctPkm3(std::vector<cv::Vec3f>& vctP, std::vector<arma::mat>& vctCovP);
+
+	/*
+	 * @note switch storage sequence
+	 */
+	void switch_storage(int iD0, int ID1);
 
 	virtual ~keypointsManager();
 

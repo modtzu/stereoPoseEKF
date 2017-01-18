@@ -141,8 +141,9 @@ bool stereoSolver::computeDepthWtCov(std::vector<cv::KeyPoint>* ptrFt0,
 		std::vector<arma::mat>& vctCovPt) {
 
 	vctCovPt.clear();
+	vctPt.clear();
 
-	std::vector<cv::Vec3f> vctPt1;
+//	std::vector<cv::Vec3f> vctPt1;
 
 	if(!computeDepth(ptrFt0,ptrFt1,vctPt))
 		return false;
