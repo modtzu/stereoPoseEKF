@@ -27,6 +27,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "dq2omega.h"
+
 
 ppTransEst ppTrans;
 pcVIsual vi;
@@ -35,6 +37,9 @@ utility UT;
 pclStereo pclStr;
 poseEKF EKF;
 plotData pl;
+
+dq2omega dqdOm;
+
 
 /// argument parser
 void argumentParser(int argc, char** argv, std::string& fileExt, std::string& fileName,
@@ -178,12 +183,16 @@ int main(int argc, char** argv)
 	std::ofstream writerQvel, writerTvel;
 	std::ofstream writerQvelCov, writerTvelCov;
 
+	std::ofstream writerOmCov, writerOm;
+
 	writerQvel.open("refQvel.txt");
 	writerTvel.open("refTvel.txt");
 
 	writerQvelCov.open("refQvelCov.txt");
 	writerTvelCov.open("refTvelCov.txt");
 
+	writerOmCov.open("Om.txt");
+	writerOm.open("Om_Cov.txt");
 
 	/// loop through input images sequence
 	while(true)
@@ -357,6 +366,15 @@ int main(int argc, char** argv)
 
 		writerQvelCov<<sqrt(cov_vq(0,0))<<","<<sqrt(cov_vq(1,1))<<","<<sqrt(cov_vq(2,2))<<"\n";
 		writerTvelCov<<sqrt(cov_vT(0,0))<<","<<sqrt(cov_vT(1,1))<<","<<sqrt(cov_vT(2,2))<<"\n";
+
+		arma::mat om, cov_om;
+
+		dqdOm.convert(q,v_q,om);
+
+		dqdOm.compute_cov_omega(q,v_q,om,covQ,cov_vq,cov_om);
+
+		writerOmCov<<om(0,0)<<","<<om(1,0)<<","<<om(2,0)<<"\n";
+		writerOm<<sqrt(cov_om(0,0))<<","<<sqrt(cov_om(1,1))<<","<<sqrt(cov_om(2,2))<<"\n";
 
 //		if(sigTx.size()>1)
 //		std::cout<<sqrt(covT(0,0))<<" "<<sqrt(covT(0,0))-sigTx[sigTx.size()-1]<<"\n";

@@ -16,6 +16,9 @@ public:
 
 	void convert(arma::mat q, arma::mat dqdt, arma::mat &omega);
 
+	void compute_cov_omega(arma::mat q, arma::mat dqdt, arma::mat omega,
+			arma::mat cov_q, arma::mat cov_dq,  arma::mat & cov_omega);
+
 	virtual ~dq2omega();
 };
 

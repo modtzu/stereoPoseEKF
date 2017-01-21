@@ -4,7 +4,7 @@ src/main.o: ../src/main.cpp ../src/input.h ../src/imgFtRelated.h \
  ../src/plotData.h \
  /home/xwong/Downloads/gnuIoStream/gnuplot-iostream/gnuplot-iostream.h \
  ../src/kltUncertainty.h ../src/featureManager.h \
- ../src/keypointsManager.h ../src/poseEKF.h
+ ../src/keypointsManager.h ../src/poseEKF.h ../src/dq2omega.h
 
 ../src/input.h:
 
@@ -35,3 +35,5 @@ src/main.o: ../src/main.cpp ../src/input.h ../src/imgFtRelated.h \
 ../src/keypointsManager.h:
 
 ../src/poseEKF.h:
+
+../src/dq2omega.h:
