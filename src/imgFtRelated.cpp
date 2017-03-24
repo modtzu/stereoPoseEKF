@@ -49,17 +49,23 @@ void imgFtRelated::getFeature(cv::Mat img, vector<cv::KeyPoint>& Ft,
 
 		}
 
-		ptrFeatureDetector->compute(img, vctRmSKeyPoint, descriptor);
+//		ptrFeatureDetector->compute(img, vctRmSKeyPoint, descriptor);
 
 		Ft = vctRmSKeyPoint;
 	}
-	else
+	else if(flg == 1)
 	{
 		vector<cv::KeyPoint> FtG;
 		getFeatureGdtt(gray, FtG);
 
-		ptrFeatureDetector->compute(img, FtG, descriptor);
+//		ptrFeatureDetector->compute(img, FtG, descriptor);
 		Ft = FtG;
+	} else {
+
+		vector<cv::KeyPoint> FtG;
+		getFeatureFAST(gray, FtG);
+		Ft = FtG;
+
 	}
 }
 
@@ -230,9 +236,9 @@ void imgFtRelated::trackFeature(cv::Mat img0, cv::Mat img1,
 
 //	cornerSubPix(img1,Ft1Pt,winSize,cv::Size(-1,-1),termCrit);
 
-	cv::Mat D0, D1;
-	img0.copyTo(D0);
-	img1.copyTo(D1);
+//	cv::Mat D0, D1;
+//	img0.copyTo(D0);
+//	img1.copyTo(D1);
 
 	removedID.clear();
 
@@ -1050,7 +1056,7 @@ bool imgFtRelated::harrisCornerCheck(cv::Point2f point, cv::Mat img) {
 void imgFtRelated::getFeatureGdtt(cv::Mat img, vector<cv::KeyPoint>& Ft) {
 
 	double qualityLevel = 1e-5;
-	double minDistance = 2;
+	double minDistance = 40;
 	int blockSize = 4;
 	bool useHarrisDetector = false;
 	double k = 0.04;
@@ -1087,6 +1093,13 @@ void imgFtRelated::getFeatureGdtt(cv::Mat img, vector<cv::KeyPoint>& Ft) {
 	cv::KeyPoint::convert(PT,Ft);
 
 }
+
+void imgFtRelated::getFeatureFAST(cv::Mat img, vector<cv::KeyPoint>& Ft) {
+
+	cv::FAST(img,Ft,16,true);
+
+}
+
 
 cv::Point2f imgFtRelated::hmCvWrapKLT(cv::Mat img0, cv::Mat img1,
 		cv::Point2f Ft0, cv::Size winSize) {

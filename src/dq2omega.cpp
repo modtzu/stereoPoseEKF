@@ -84,10 +84,10 @@ void dq2omega::compute_cov_omega(arma::mat q, arma::mat dqdt, arma::mat omega, a
 	cov_omega = arma::zeros(3,3);
 	cov_omega = dOmdq*cov_q*dOmdq.t() + dOm_ddqdt*cov_dq*dOm_ddqdt.t();
 
-	dOmdq.print("dOmdq");
-	dOm_ddqdt.print("dOmddq");
-	cov_q.print("dq");
-	cov_dq.print("covdq");
+//	dOmdq.print("dOmdq");
+//	dOm_ddqdt.print("dOmddq");
+//	cov_q.print("dq");
+//	cov_dq.print("covdq");
 
 
 }

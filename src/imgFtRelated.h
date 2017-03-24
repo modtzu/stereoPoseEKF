@@ -74,6 +74,13 @@ public:
 	void getFeatureGdtt(cv::Mat img, vector<cv::KeyPoint>& Ft);
 
 	/*
+	 *@note extract feature with good feature to track method
+	 *@input img input image
+	 *@input Ft output vector of feature
+	 */
+	void getFeatureFAST(cv::Mat img, vector<cv::KeyPoint>& Ft);
+
+	/*
 	 *@note get SIFT descriptor for non SIFT feature ectracted feature points
 	 *@input img input image
 	 *@input kFt vector of feature points

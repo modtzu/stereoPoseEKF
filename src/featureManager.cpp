@@ -26,11 +26,10 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	vctCovFt0L.clear();
 	vctCovFt0R.clear();
 
-
-	ptrFeature->getFeature(imgL,vctFt0L,des0,0);
+	ptrFeature->getFeature(imgL,vctFt0L,des0,1);
 
 	/// Establish key points correspondence in initial stereo pair with KLT tracker
-	ptrFeature->trackFeature(imgL,imgR,vctFt0L,vctFt0R,vctReID,cv::Size(20,20));
+	ptrFeature->trackFeature(imgL,imgR,vctFt0L,vctFt0R,vctReID,cv::Size(10,10));
 
 	/// get SIFT descriptor for tracked feature
 	ptrFeature->getDescriptorForPt(imgL,vctFt0L,des0);
@@ -62,15 +61,21 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	initCov.eye();
 
 	int CS = vctFt0L.size();
-	for(int i=0; i<CS; i++)
-	{
-		int k = CS - i - 1;
-		arma::mat tCov = KLTU.kltCovLS(imgL0,imgR0,cv::Size(20,20),vctFt0L[k],vctFt0R[k],initCov,
-															cv::Size(5,5),
-															1.6);
-		vctCovFt0L.push_back(initCov);
-		vctCovFt0R.push_back(tCov);
-	}
+
+	vctCovFt0L = std::vector<arma::mat>(CS,initCov);
+	vctCovFt0R = std::vector<arma::mat>(CS,initCov);
+
+//	for(int i=0; i<CS; i++)
+//	{
+////		int k = CS - i - 1;
+////		arma::mat tCov = KLTU.kltCovLS(imgL0,imgR0,cv::Size(20,20),vctFt0L[k],vctFt0R[k],initCov,
+////															cv::Size(5,5),
+////															1.6);
+//		vctCovFt0L.push_back(initCov);
+//		vctCovFt0R.push_back(initCov);
+//
+////		vctCovFt0R.push_back(tCov);
+//	}
 
 	imgL.copyTo(imgL0);
 	imgR.copyTo(imgR0);
@@ -81,6 +86,8 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 		std::vector<int>& ejectID) {
 
+		cv::Size winsize(20,20);
+
 		std::vector<cv::KeyPoint> vctFt1L, vctFt1R;
 		std::vector<arma::mat> vctCovFt1L, vctCovFt1R;
 
@@ -89,7 +96,7 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 
 		std::vector<int> rmvID;
 
-		ptrFeature->trackFeature(imgL0,imgLt,vctFt0L,vctFt1L,rmvID,cv::Size(20,20),1);
+		ptrFeature->trackFeature(imgL0,imgLt,vctFt0L,vctFt1L,rmvID,winsize,1);
 
 		int ID2rmv = -1;
 
@@ -111,11 +118,13 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 
 			arma::mat initCov = vctCovFt0L[k];
 
-			arma::mat tCov = KLTU.kltCovLS(imgL0,imgLt,cv::Size(20,20),vctFt0L[k],vctFt1L[k],initCov,
+			arma::mat tCov = KLTU.kltCovLS(imgL0,imgLt,winsize,vctFt0L[k],vctFt1L[k],initCov,
 																cv::Size(16,16),
 																1.6);
 
 			vctCovFt1L[k]=(tCov);
+
+			double approxEig = arma::trace(tCov);
 
 			arma::cx_vec eigVal;
 			arma::cx_mat eigVec;
@@ -125,14 +134,9 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 
 			if(covTh > 0)
 			{
-				if(eig(0,0)>covTh || eig(1,0) > covTh || eig(0,0)<= 0|| eig(1,0)<=0)
+				if(approxEig > covTh*covTh || approxEig <= 0)
 				{
 					rmvID2.push_back(k);
-	//				vctCovFt1L.push_back(tCov);
-				}
-				else
-				{
-
 				}
 			}
 
@@ -140,7 +144,7 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 
 
 		rmvID.clear();
-		ptrFeature->trackFeature(imgR0,imgRt,vctFt0R,vctFt1R,rmvID,cv::Size(20,20),1);
+		ptrFeature->trackFeature(imgR0,imgRt,vctFt0R,vctFt1R,rmvID,winsize,1);
 
 		int ID2rmv2 = 0;
 			ID2rmv = 0;
@@ -195,44 +199,22 @@ int featureManager::updateFeature(cv::Mat imgLt, cv::Mat imgRt,
 				}
 			}
 
-//			if(!rmvID2.empty() && k == rmvID2[ID2rmv2])
-//			{
-//				ID2rmv2++;
-//				rmvID3.push_back(rmvID2[ID2rmv2]);
-//				continue;
-//			}
-//
-//			if(!rmvID.empty() && k == rmvID[ID2rmv])
-//			{
-//				ID2rmv++;
-//				rmvID3.push_back(rmvID[ID2rmv]);
-//				continue;
-//			}
 
 			arma::mat initCov = vctCovFt0L[k];
 
-			arma::mat tCov = KLTU.kltCovLS(imgR0,imgRt,cv::Size(20,20),vctFt0R[k],vctFt1R[k],initCov,
+			arma::mat tCov = KLTU.kltCovLS(imgR0,imgRt,winsize,vctFt0R[k],vctFt1R[k],initCov,
 																cv::Size(5,5),
 																1.6);
 
 			vctCovFt1R[k]=(tCov);
 
-
-			arma::cx_vec eigVal;
-			arma::cx_mat eigVec;
-
-			arma::eig_gen(eigVal,eigVec,tCov);
-			arma::mat eig = arma::real(eigVal);
+			double approxEig = (arma::trace(tCov));
 
 			if(covTh > 0)
-			if(eig(0,0)>covTh || eig(1,0) > covTh || eig(0,0)<= 0|| eig(1,0)<=0)
-			{
-				rmvID3.push_back(k);
-			}
-			else
-			{
-//				vctCovFt1R.push_back(tCov);
-			}
+				if(approxEig > covTh*covTh || approxEig <= 0)
+				{
+					rmvID3.push_back(k);
+				}
 		}
 
 		int CS  = rmvID3.size();

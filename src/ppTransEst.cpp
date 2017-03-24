@@ -664,18 +664,6 @@ bool ppTransEst::solveLinear3rdOrder(std::vector<cv::Vec3f> Pt0,
 				pk(2,0) = Str[k][i][2] + Pt0[i][2];
 
 				arma::mat pkX = crossProductMatrix(pk);
-//
-//				H.submat(c,0,c+2,2) = pkX;
-//				H.submat(c,3,c+2,5) = pkX*(ord*dt);
-//				H.submat(c,6,c+2,8) = pkX*(ord*dt)*(ord*dt)*0.5;
-//				H.submat(c,9,c+2,11).eye();
-//				H.submat(c,12,c+2,14).eye();
-//				H.submat(c,15,c+2,17).eye();
-//
-//				H.submat(c,12,c+2,14)*=(ord*dt);
-//				H.submat(c,15,c+2,17)*=(ord*dt)*(ord*dt)*0.5;
-
-				/// MkII
 
 				H.submat(c,0,c+2,2) = pkX*(ord*dt);
 				H.submat(c,3,c+2,5) = pkX*(ord*dt)*(ord*dt)*0.5;

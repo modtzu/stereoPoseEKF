@@ -69,24 +69,18 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 			    C1.y + winSize.height >img0.rows ||
 				C2.y + winSize.height >img1.rows)
 		{
-			arma::mat I(2,2);
-			I.ones();
-			I*= -1;
+			arma::mat I = -arma::eye(2,2);
 			return I;
 		}
 
 		cv::Mat sub0, sub1, sub2;
 		sub0 = img0(cv::Rect(C1,winSize));
 		sub1 = img1(cv::Rect(C2,winSize));
-		sub2 = img1(cv::Rect(C2,winSize));
-
-//		sub0 = img0;//(cv::Rect(C1,winSize));
-//		sub1 = img1;//(cv::Rect(C1,winSize));
-//		sub2 = img1;//(cv::Rect(C2,winSize));
+//		sub2 = img1(cv::Rect(C2,winSize));
 
 		sub0.convertTo(sub0,CV_32FC1,1./255,0);
 		sub1.convertTo(sub1,CV_32FC1,1./255,0);
-		sub2.convertTo(sub2,CV_32FC1,1./255,0);
+//		sub2.convertTo(sub2,CV_32FC1,1./255,0);
 
 		cv::Mat dG = sub0 - sub1;
 
@@ -104,9 +98,9 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 		cv::filter2D(sub0,G0X,-1,dGXk);
 		cv::filter2D(sub0,G0Y,-1,dGYk);
 
-		cv::filter2D(sub0,H0X,-1,dGXXk);
-		cv::filter2D(sub0,H0Y,-1,dGYYk);
-		cv::filter2D(sub0,H0XY,-1,dGXYk);
+//		cv::filter2D(sub0,H0X,-1,dGXXk);
+//		cv::filter2D(sub0,H0Y,-1,dGYYk);
+//		cv::filter2D(sub0,H0XY,-1,dGXYk);
 
 		cv::filter2D(sub1,H1X,-1,dGXXk);
 		cv::filter2D(sub1,H1Y,-1,dGYYk);
@@ -125,28 +119,27 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 		cv::Point2f T = Ft1 - Ft0;
 
 		{
-		arma::mat A(2,2);
-		arma::mat B(2,1);
+			arma::mat A(2,2);
+			arma::mat B(2,1);
 
-		A.zeros();
-		B.zeros();
+			A.zeros();
+			B.zeros();
 
-		for(int xi =0 ; xi < winSize.width; xi++)
-			for(int yi =0 ; yi < winSize.height; yi++)
-			{
-				A(0,0) += G1X.at<float>(yi,xi)*G1X.at<float>(yi,xi);
-				A(0,1) += G1X.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
-				A(1,0) += G1Y.at<float>(yi,xi)*G1X.at<float>(yi,xi);
-				A(1,1) += G1Y.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
+			for(int xi =0 ; xi < winSize.width; xi++)
+				for(int yi =0 ; yi < winSize.height; yi++)
+				{
+					A(0,0) += G1X.at<float>(yi,xi)*G1X.at<float>(yi,xi);
+					A(0,1) += G1X.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
+					A(1,0) += G1Y.at<float>(yi,xi)*G1X.at<float>(yi,xi);
+					A(1,1) += G1Y.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
 
-				B(0,0) += (float)dG.at<float>(yi,xi)*G1X.at<float>(yi,xi); /// may be a constant gain?
-				B(1,0) += (float)dG.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
-			}
+					B(0,0) += (float)dG.at<float>(yi,xi)*G1X.at<float>(yi,xi); /// may be a constant gain?
+					B(1,0) += (float)dG.at<float>(yi,xi)*G1Y.at<float>(yi,xi);
+				}
 
-			arma::mat D = A.i()*B;
-			T.x = D(0,0);
-			T.y = D(1,0);
-
+				arma::mat D = A.i()*B;
+				T.x = D(0,0);
+				T.y = D(1,0);
 		}
 
 
@@ -160,6 +153,7 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 		arma::mat Wy;
 		Wx.zeros();
 		Wy = Wx;
+//		double sigma = winSize.height/2;
 
 		for(int xi =0 ; xi < winSize.width; xi++)
 			for(int yi =0 ; yi < winSize.height; yi++)
@@ -175,47 +169,25 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 
 				dAduT(yi+xi*winSize.height,0) = T.x*H1X.at<float>(yi,xi) + T.y*H1YX.at<float>(yi,xi);
 				dAdvT(yi+xi*winSize.height,0) = T.x*H1XY.at<float>(yi,xi) + T.y*H1Y.at<float>(yi,xi);
-
-				double x = xi - winSize.width/2;
-				double y = yi - winSize.height/2;
-
-				double sigma = winSize.height/2;
-
-				if(Pt0.size < winSize.height)
-					sigma = Pt0.size/2;
-
-				double w = Gaussian(x,y,sigma);
-
-				arma::mat UV(2,1);
-				UV(0,0) = x;
-				UV(1,0) = y;
-
-				sigmaUVM += w*UV*UV.t();
-
-//				Wx(yi+xi*winSize.height,yi+xi*winSize.height) = Gaussian(x,y,2);
-//				Wy(yi+xi*winSize.height,yi+xi*winSize.height) = Gaussian(x,y,2);
-
-				Wx(yi+xi*winSize.height,yi+xi*winSize.height) = (1/max(float(1),fabs(G0X.at<float>(yi,xi) - G1X.at<float>(yi,xi))));
-				Wy(yi+xi*winSize.height,yi+xi*winSize.height) = (1/max(float(1),fabs(G0Y.at<float>(yi,xi) - G1Y.at<float>(yi,xi))));
-
 			}
 
-		Wx.eye();
-		Wy.eye();
+		arma::mat AtA = A.t()*A;
 
-		if(arma::det(A.t()*A)<1e-4)
+		if(arma::det(AtA)<1e-4)
 			return covPre.zeros();
 
-		arma::mat dTdu = arma::inv((A.t()*Wx*A))*A.t()*Wx*(dBdu - dAduT);
-		arma::mat dTdv = arma::inv((A.t()*Wy*A))*A.t()*Wy*(dBdv - dAdvT);
+		arma::mat Ax = arma::inv(AtA)*A.t();
+
+		arma::mat dTdu = Ax*(dBdu - dAduT);
+		arma::mat dTdv = Ax*(dBdv - dAdvT);
 
 		arma::mat K(2,2);
 
 		K.col(0) = arma::abs(dTdu.col(0));
 		K.col(1) = arma::abs(dTdv.col(0));
 
-		arma::mat sigmaUV(2,2);
-		sigmaUV = sigmaUVM;
+		arma::mat sigmaUV = arma::eye(2,2);
+//		sigmaUV = sigmaUVM;
 
 //		sigmaUV.eye();
 
@@ -236,22 +208,14 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 				arma::mat X2 = K*sigmaUV + sigmaUV*K.t();
 				arma::mat X =  K*(sigmaUV)*K.t()+ X2;
 
-				arma::cx_vec eigVal;
-				arma::cx_mat eigVec;
-
-				arma::eig_gen(eigVal,eigVec,X);
-
-				arma::mat eig = arma::real(eigVal);
-
-//				eig.print("eig");
-
-				if(eig(0,0)>1e2 ||eig(1,0)>1e2)
+				if(arma::trace(X)>1e4 ||arma::trace(X)>1e4)
 				{
 					sigmaKLT.eye(2,2);
 					sigmaKLT*= -1;
 				}
 				else
 					sigmaKLT = (X + sigmaUV);
+
 
 				break;
 			}
@@ -268,8 +232,7 @@ arma::mat kltUncertainty::kltCovLS(cv::Mat img0, cv::Mat img1,
 				break;
 			}
 			case 2:
-			{
-			}
+				break;
 
 		}
 

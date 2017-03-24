@@ -29,6 +29,7 @@
 
 #include "dq2omega.h"
 
+#include <thread>
 
 ppTransEst ppTrans;
 pcVIsual vi;
@@ -40,6 +41,14 @@ plotData pl;
 
 dq2omega dqdOm;
 
+
+/*
+ * Stereo camera setting
+ */
+double u0 = 305.408;
+double v0 = 244.826;
+double f = 808.083;
+double b = 0.240272;
 
 /// argument parser
 void argumentParser(int argc, char** argv, std::string& fileExt, std::string& fileName,
@@ -75,11 +84,50 @@ void argumentParser(int argc, char** argv, std::string& fileExt, std::string& fi
 	}
 }
 
+struct stereo_pack {
+	cv::Mat imgL0;
+	cv::Mat imgR0;
+	int Fr;
+	arma::mat Rt0;
+	arma::mat Tt0;
+};
+
+void stereo_thread(stereo_pack in){
+
+	Eigen::Matrix4f transformMat = Eigen::Matrix4f::Identity();
+
+		for(int i=0 ; i < 3; i ++)
+		{
+			for(int j=0 ; j < 3; j ++)
+			{
+				transformMat(i,j) = in.Rt0(i,j);
+			}
+			transformMat(i,3) = in.Tt0(i,0);
+		}
+
+		char ptName[256];
+		sprintf(ptName,"%d",in.Fr);
+
+		char camName[256];
+		sprintf(camName,"cam%d",in.Fr);
+
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+
+		pclStr.solveStereo(in.imgL0,in.imgR0,pointCloudPtr,u0,v0,f,b);
+
+		vi.addPt2Window("fullMap",pointCloudPtr,std::string(ptName),transformMat);
+
+		vi.addCamera2Window("fullMap",std::string(camName),transformMat);
+
+}
 
 int main(int argc, char** argv)
 {
 	std::string fileExt, fileName, camCalibFile, optionFile;
 	int initCounter = 0;
+
+	/// set this to true to enable EFK solution, otherwise for linear least square solution
+	bool FLAG_EKF = false;
 
 	/// parse argument
 	argumentParser(argc, argv,fileExt,fileName, camCalibFile,optionFile,initCounter);
@@ -98,7 +146,7 @@ int main(int argc, char** argv)
 	}
 
 	/// feature manager
-	featureManager ftMng(3,300);
+	featureManager ftMng(5,300);
 
 	/// feature storage
 	std::vector<cv::KeyPoint> vctFt0L, vctFt0R;
@@ -113,22 +161,18 @@ int main(int argc, char** argv)
 		return false;
 
 	/*
-	 * Stereo camera setting
-	 */
-	double u0 = 305.408;
-	double v0 = 244.826;
-	double f = 808.083;
-	double b = 0.240272;
-
-	/*
 	 * Compute 3D map at initial frame
 	 */
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+//	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+//
+//	pclStr.solveStereo(imgL0,imgR0,pointCloudPtr,u0,v0,f,b);
+//
+//	vi.addPt2Window("fullMap",pointCloudPtr,"0");
+//	vi.addCamera2Window("fullMap","cam0",Eigen::Matrix4f::Identity());
 
-	pclStr.solveStereo(imgL0,imgR0,pointCloudPtr,u0,v0,f,b);
+	stereo_pack data {imgL0,imgR0,0,arma::eye(3,3),arma::zeros(3,1)};
+	std::thread *ptr_th = new std::thread(stereo_thread,data);
 
-	vi.addPt2Window("fullMap",pointCloudPtr,"0");
-	vi.addCamera2Window("fullMap","cam0",Eigen::Matrix4f::Identity());
 
 	/*
 	 * Initialize keypoint manager and estimate keypoints 3D loc. in initial frame
@@ -265,7 +309,7 @@ int main(int argc, char** argv)
 			v_q = matB.col(1);
 
 			cov_vT = sigmaA.submat(3,3,5,5);
-			cov_vq = sigmaB.submat(3,3,5,5);;
+			cov_vq = sigmaB.submat(3,3,5,5);
 		}
 		else
 			if(keyPtMng.getVctPkm2(vctPkm2,vctCovPkm2))
@@ -322,50 +366,48 @@ int main(int argc, char** argv)
 		propXp = propX;
 		propSigXp = propSigX;
 
-		EKF.propagate(matA,matB,sigmaA,sigmaB,dt,propX,propSigX);
+		if(FLAG_EKF){
 
-//		covQ.print("covQ");
-//		covT.print("covT");
+			EKF.propagate(matA,matB,sigmaA,sigmaB,dt,propX,propSigX);
 
-		arma::mat pQ,pT;
-		pQ = covQ;
-		pT = covT;
+			arma::mat pQ,pT;
+			pQ = covQ;
+			pT = covT;
 
-		if(arma::norm(propXp)!=0)
-		{
-			arma::mat Xk, sigXk;
+			if(arma::norm(propXp)!=0)
+			{
+				arma::mat Xk, sigXk;
 
-			arma::mat Xm(6,1);
-			Xm.submat(0,0,2,0) = T;
-			Xm.submat(3,0,5,0) = q;
+				arma::mat Xm(6,1);
+				Xm.submat(0,0,2,0) = T;
+				Xm.submat(3,0,5,0) = q;
 
-			arma::mat sigXm = arma::zeros(6,6);
-			sigXm.submat(0,0,2,2) = covT;
-			sigXm.submat(3,3,5,5) = covQ;
+				arma::mat sigXm = arma::zeros(6,6);
+				sigXm.submat(0,0,2,2) = covT;
+				sigXm.submat(3,3,5,5) = covQ;
 
-//			EKF.updateMkII(propXp,propSigXp,Xm,sigXm,Xk,sigXk);
+				EKF.update(propXp, propSigXp,
+							vctPk, vctCovPk,
+							vctPkm1, Xk,sigXk);
 
-			EKF.update(propXp, propSigXp,
-						vctPk, vctCovPk,
-						vctPkm1, Xk,sigXk);
+				T = Xk.submat(0,0,2,0);
+				q = Xk.submat(3,0,5,0);
 
-			T = Xk.submat(0,0,2,0);
-			q = Xk.submat(3,0,5,0);
+				covT = sigXk.submat(0,0,2,2);
+				covQ = sigXk.submat(3,3,5,5);
 
-			covT = sigXk.submat(0,0,2,2);
-			covQ = sigXk.submat(3,3,5,5);
+				R = ppTrans.CRP2ROT(q);
+			}
 
-			R = ppTrans.CRP2ROT(q);
 		}
-
 		vctRefTrans.push_back(T);
 		vctRefCRP.push_back(q);
 
-		writerQvel<<v_q(0,0)<<","<<v_q(1,0)<<","<<v_q(2,0)<<"\n";
-		writerTvel<<v_T(0,0)<<","<<v_T(1,0)<<","<<v_T(2,0)<<"\n";
-
-		writerQvelCov<<sqrt(cov_vq(0,0))<<","<<sqrt(cov_vq(1,1))<<","<<sqrt(cov_vq(2,2))<<"\n";
-		writerTvelCov<<sqrt(cov_vT(0,0))<<","<<sqrt(cov_vT(1,1))<<","<<sqrt(cov_vT(2,2))<<"\n";
+//		writerQvel<<v_q(0,0)<<","<<v_q(1,0)<<","<<v_q(2,0)<<"\n";
+//		writerTvel<<v_T(0,0)<<","<<v_T(1,0)<<","<<v_T(2,0)<<"\n";
+//
+//		writerQvelCov<<sqrt(cov_vq(0,0))<<","<<sqrt(cov_vq(1,1))<<","<<sqrt(cov_vq(2,2))<<"\n";
+//		writerTvelCov<<sqrt(cov_vT(0,0))<<","<<sqrt(cov_vT(1,1))<<","<<sqrt(cov_vT(2,2))<<"\n";
 
 		arma::mat om, cov_om;
 
@@ -373,8 +415,8 @@ int main(int argc, char** argv)
 
 		dqdOm.compute_cov_omega(q,v_q,om,covQ,cov_vq,cov_om);
 
-		writerOmCov<<om(0,0)<<","<<om(1,0)<<","<<om(2,0)<<"\n";
-		writerOm<<sqrt(cov_om(0,0))<<","<<sqrt(cov_om(1,1))<<","<<sqrt(cov_om(2,2))<<"\n";
+//		writerOmCov<<om(0,0)<<","<<om(1,0)<<","<<om(2,0)<<"\n";
+//		writerOm<<sqrt(cov_om(0,0))<<","<<sqrt(cov_om(1,1))<<","<<sqrt(cov_om(2,2))<<"\n";
 
 //		if(sigTx.size()>1)
 //		std::cout<<sqrt(covT(0,0))<<" "<<sqrt(covT(0,0))-sigTx[sigTx.size()-1]<<"\n";
@@ -385,13 +427,13 @@ int main(int argc, char** argv)
 //		pT.print("pT");
 //		covT.print("cT");
 
-		sigTx.push_back(sqrt(covT(0,0)));
-		sigTy.push_back(sqrt(covT(1,1)));
-		sigTz.push_back(sqrt(covT(2,2)));
-
-		sigQx.push_back(sqrt(covQ(0,0)));
-		sigQy.push_back(sqrt(covQ(1,1)));
-		sigQz.push_back(sqrt(covQ(2,2)));
+//		sigTx.push_back(sqrt(covT(0,0)));
+//		sigTy.push_back(sqrt(covT(1,1)));
+//		sigTz.push_back(sqrt(covT(2,2)));
+//
+//		sigQx.push_back(sqrt(covQ(0,0)));
+//		sigQy.push_back(sqrt(covQ(1,1)));
+//		sigQz.push_back(sqrt(covQ(2,2)));
 
 		if(vctTransCov.empty())
 		{
@@ -411,8 +453,6 @@ int main(int argc, char** argv)
 //		sigQx.push_back(sqrt(vctCRPCov[vctCRPCov.size()-1](0,0)));
 //		sigQy.push_back(sqrt(vctCRPCov[vctCRPCov.size()-1](1,1)));
 //		sigQz.push_back(sqrt(vctCRPCov[vctCRPCov.size()-1](2,2)));
-
-
 
 //		propSigXp.submat(0,0,2,2).print("sigT");
 //		propSigXp.submat(3,3,5,5).print("sigQ");
@@ -435,31 +475,40 @@ int main(int argc, char** argv)
 
 		if(tri > 20)
 		{
-			/// visualize key points in initial frame.
-			Eigen::Matrix4f transformMat = Eigen::Matrix4f::Identity();
+//			/// visualize key points in initial frame.
+//			Eigen::Matrix4f transformMat = Eigen::Matrix4f::Identity();
+//
+//			for(int i=0 ; i < 3; i ++)
+//			{
+//				for(int j=0 ; j < 3; j ++)
+//				{
+//					transformMat(i,j) = Rt0(i,j);
+//				}
+//				transformMat(i,3) = Tt0(i,0);
+//			}
+//
+//			char ptName[256];
+//			sprintf(ptName,"%d",Fr);
+//
+//			char camName[256];
+//			sprintf(camName,"cam%d",Fr);
+//
+//			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+//
+//			pclStr.solveStereo(imgLt,imgRt,pointCloudPtr,u0,v0,f,b);
+//
+//			vi.addPt2Window("fullMap",pointCloudPtr,std::string(ptName),transformMat);
+//
+//			vi.addCamera2Window("fullMap",std::string(camName),transformMat);
+//
+			stereo_pack data {imgLt,imgRt,Fr,Rt0,Tt0};
 
-			for(int i=0 ; i < 3; i ++)
-			{
-				for(int j=0 ; j < 3; j ++)
-				{
-					transformMat(i,j) = Rt0(i,j);
-				}
-				transformMat(i,3) = Tt0(i,0);
+			if(ptr_th != NULL) {
+				ptr_th->join();
+				delete ptr_th;
 			}
 
-			char ptName[256];
-			sprintf(ptName,"%d",Fr);
-
-			char camName[256];
-			sprintf(camName,"cam%d",Fr);
-
-			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
-
-			pclStr.solveStereo(imgLt,imgRt,pointCloudPtr,u0,v0,f,b);
-
-			vi.addPt2Window("fullMap",pointCloudPtr,std::string(ptName),transformMat);
-
-			vi.addCamera2Window("fullMap",std::string(camName),transformMat);
+			ptr_th = new std::thread(stereo_thread,data);
 
 			tri = 0;
 		}
@@ -484,7 +533,7 @@ int main(int argc, char** argv)
 
 		float sc = (float)vctPk.size()/(float)initF;
 
-		if(sc < 0.1 || vctPk.size() < 20)
+		if(sc < 0.2 || vctPk.size() < 30)
 		{
 			/// restart feature at current frame, but set it as second frame
 			int numOfFt = ftMng.initFeaturePair(imgLt,imgRt);
@@ -530,23 +579,23 @@ int main(int argc, char** argv)
 	writerTvelCov.close();
 
 
-	pl.plot(sigQx,0,"1-sigma",PL_GRID_ON);
-	pl.save("Q1.png");
+//	pl.plot(sigQx,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Q1.png");
 
-	pl.plot(sigQy,0,"1-sigma",PL_GRID_ON);
-	pl.save("Q2.png");
-
-	pl.plot(sigQz,0,"1-sigma",PL_GRID_ON);
-	pl.save("Q3.png");
-
-	pl.plot(sigTx,0,"1-sigma",PL_GRID_ON);
-	pl.save("Tx.png");
-
-	pl.plot(sigTy,0,"1-sigma",PL_GRID_ON);
-	pl.save("Ty.png");
-
-	pl.plot(sigTz,0,"1-sigma",PL_GRID_ON);
-	pl.save("Tz.png");
+//	pl.plot(sigQy,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Q2.png");
+//
+//	pl.plot(sigQz,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Q3.png");
+//
+//	pl.plot(sigTx,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Tx.png");
+//
+//	pl.plot(sigTy,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Ty.png");
+//
+//	pl.plot(sigTz,0,"1-sigma",PL_GRID_ON);
+//	pl.save("Tz.png");
 
 	vi.showWindow("fullMap");
 
