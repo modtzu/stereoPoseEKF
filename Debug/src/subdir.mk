@@ -15,7 +15,6 @@ CPP_SRCS += \
 ../src/main.cpp \
 ../src/pcVIsual.cpp \
 ../src/pclStereo.cpp \
-../src/plotData.cpp \
 ../src/poseEKF.cpp \
 ../src/ppTransCov.cpp \
 ../src/ppTransEst.cpp \
@@ -34,7 +33,6 @@ OBJS += \
 ./src/main.o \
 ./src/pcVIsual.o \
 ./src/pclStereo.o \
-./src/plotData.o \
 ./src/poseEKF.o \
 ./src/ppTransCov.o \
 ./src/ppTransEst.o \
@@ -53,7 +51,6 @@ CPP_DEPS += \
 ./src/main.d \
 ./src/pcVIsual.d \
 ./src/pclStereo.d \
-./src/plotData.d \
 ./src/poseEKF.d \
 ./src/ppTransCov.d \
 ./src/ppTransEst.d \
