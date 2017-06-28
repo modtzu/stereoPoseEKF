@@ -16,8 +16,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
+// #include "opencv2/features2d/features2d.hpp"
+#include "opencv2/xfeatures2d/nonfree.hpp"
 
 
 #include <vector>
@@ -36,12 +36,12 @@ using namespace std;
 class imgFtRelated {
 
 private:
-	cv::SiftFeatureDetector* ptrFeatureDetector;
+
 
 	std::ofstream ftWriter;
 
 public:
-
+	cv::xfeatures2d::SiftFeatureDetector* ptrFeatureDetector;
 //	int maxNumFt = 100, int octaveLvl = 3, int contrastTh = 0.1, int edgeTh = 20, int sigma = 2.6
 
 	/*
@@ -52,9 +52,10 @@ public:
 	 *@input edgeTh SIFT edge threshold
 	 *@input sigma SIFT sigma vaue
 	 */
-	imgFtRelated(int maxNumFt = 100, int octaveLvl = 3, int contrastTh = 0.0001, int edgeTh = 10, int sigma =1.6)
+	imgFtRelated(int maxNumFt = 100, int octaveLvl = 3, double contrastTh = 0.0001, double edgeTh = 10, double sigma =1.6)
 	{
-		ptrFeatureDetector = new cv::SiftFeatureDetector(maxNumFt,octaveLvl,contrastTh, edgeTh, sigma);
+		using cv::xfeatures2d::SiftFeatureDetector;
+		ptrFeatureDetector = cv::xfeatures2d::SiftFeatureDetector::create(maxNumFt,octaveLvl,contrastTh, edgeTh, sigma);
 	}
 
 	/*
