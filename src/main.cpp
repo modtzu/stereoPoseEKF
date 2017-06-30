@@ -120,6 +120,9 @@ void stereo_thread(stereo_pack in){
 
 int main(int argc, char** argv)
 {
+
+	std::cout<<"---------------------------- Ok everything is starting to run ------------------"<<std::endl;
+	
 	std::string fileExt, fileName, camCalibFile, optionFile;
 	int initCounter = 0;
 

@@ -10,6 +10,7 @@
 
 #include "opencv2/opencv.hpp"
 #include "armadillo"
+#include <vector>
 
 class utility {
 public:

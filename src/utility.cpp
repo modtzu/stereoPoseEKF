@@ -116,12 +116,15 @@ void utility::showHistogram(cv::Mat img) {
 
 void utility::histRGB(cv::Mat img, int low, int up) {
 
-	cv::vector<cv::Mat> bgrPlanes;
+	std::vector<cv::Mat> bgrPlanes;
 	cv::split(img,bgrPlanes);
 
 	int histPins = 256;
 
-	float range[] = {low,up};
+	float range[2];
+	range[0]=low;
+	range[1]=up;
+
 	const float* histRange = {range};
 
 	bool uniform = true;
@@ -417,7 +420,7 @@ cv::RotatedRect utility::plotCovmat(double chisquare_val, cv::Point2f mean, arma
 
 	//Get the eigenvalues and eigenvectors
 	cv::Mat eigenvalues, eigenvectors;
-	cv::eigen(covMat, true, eigenvalues, eigenvectors);
+	cv::eigen(covMat, eigenvalues, eigenvectors);
 
 	//Calculate the angle between the largest eigenvector and the x-axis
 	double angle = fabs(atan2(eigenvectors.at<double>(0,1), eigenvectors.at<double>(0,0)));
