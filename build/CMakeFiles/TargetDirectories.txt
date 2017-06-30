@@ -1,3 +1,0 @@
-/home/venkat/GoogleDrive/repos/stereoPoseEKF/build/CMakeFiles/edit_cache.dir
-/home/venkat/GoogleDrive/repos/stereoPoseEKF/build/CMakeFiles/rebuild_cache.dir
-/home/venkat/GoogleDrive/repos/stereoPoseEKF/build/CMakeFiles/stereoPoseEKF.dir
