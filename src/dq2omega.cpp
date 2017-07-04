@@ -14,6 +14,7 @@ dq2omega::dq2omega() {
 
 void dq2omega::convert(arma::mat q, arma::mat dqdt, arma::mat& omega) {
 
+
 	arma::mat cQ = arma::zeros(3,3);
 	cQ(0,1) = -q(2,0);
 	cQ(1,0) =  q(2,0);

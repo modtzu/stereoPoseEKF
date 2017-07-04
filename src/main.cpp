@@ -28,6 +28,11 @@
 #include "dq2omega.h"
 
 #include <thread>
+#include <unistd.h>
+
+using std::cout;
+using std::endl;
+
 
 ppTransEst ppTrans;
 pcVIsual vi;
@@ -87,6 +92,7 @@ struct stereo_pack {
 	int Fr;
 	arma::mat Rt0;
 	arma::mat Tt0;
+	
 };
 
 void stereo_thread(stereo_pack in){
@@ -122,7 +128,7 @@ int main(int argc, char** argv)
 {
 
 	std::cout<<"---------------------------- Ok everything is starting to run ------------------"<<std::endl;
-	
+
 	std::string fileExt, fileName, camCalibFile, optionFile;
 	int initCounter = 0;
 
@@ -133,6 +139,9 @@ int main(int argc, char** argv)
 	argumentParser(argc, argv,fileExt,fileName, camCalibFile,optionFile,initCounter);
 
 	/// setup image input reader
+	cout<<"fileExt = "<<fileExt<<endl;
+	cout<<"initCounter = "<<initCounter<<endl;
+
 	input imgIn(fileExt,initCounter);
 
 	/// Image at t = k-1
@@ -145,6 +154,9 @@ int main(int argc, char** argv)
 		return false;
 	}
 
+	cout<<"image reading done"<<endl;
+
+
 	/// feature manager
 	/*
 	 *  (1st number is feature track uncertainty threshold,
@@ -152,17 +164,32 @@ int main(int argc, char** argv)
 	 */
 	featureManager ftMng(5,300);
 
+	cout<<"feature manager done"<<endl;
+
+
 	/// feature storage
 	std::vector<cv::KeyPoint> vctFt0L, vctFt0R;
 	std::vector<arma::mat> vctCovFt0L, vctCovFt0R;
 	std::vector<int> rmvID;
 
+	cout<<"vector done"<<endl;
+
+
+
 	int numOfFt = ftMng.initFeaturePair(imgL0,imgR0);
+
+	cout<<"numOfFt A = "<< numOfFt<<endl;
+
 
 	if(numOfFt>0)
 		ftMng.getFeaturePair(&vctFt0L,&vctFt0R,&vctCovFt0L,&vctCovFt0R);
 	else
 		return false;
+
+	cout<<"numOfFt B = "<< numOfFt<<endl;
+
+
+
 
 	/*
 	 * Compute 3D map at initial frame
@@ -515,8 +542,10 @@ int main(int argc, char** argv)
 		imgLt.copyTo(imgL0);
 
 	}
-
+  std::cout << "tri = "<< tri << '\n';
 	vi.showWindow("fullMap");
+
+	sleep(20);
 
 //	writerQvel.close();
 //	writerTvel.close();
@@ -583,7 +612,7 @@ int main(int argc, char** argv)
 //
 //	writerQ.close();
 
-
+	std::cout << "done and exiting" << '\n';
 	return 0;
 
 	/// relative pose uncertainty

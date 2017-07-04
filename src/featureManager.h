@@ -24,6 +24,12 @@
 
 #include <memory>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
+
+
 class featureManager {
 private:
 

@@ -74,8 +74,18 @@ void imgFtRelated::getFeature(cv::Mat img, vector<cv::KeyPoint>& Ft,
 
 void imgFtRelated::getDescriptorForPt(cv::Mat img,
 		vector<cv::KeyPoint> kFt, cv::Mat& descriptor) {
+			cout<<"inside getDescriptorForPt"<<endl;
+			cout << "img dims = "<<img.rows<<" "<<img.cols <<endl;
+			cout <<"kFt "<<kFt.size()<<endl;
+			cout << "descriptor dims = "<<descriptor.rows<<" "<<descriptor.cols <<endl;
+			// cout << "ptrFeatureDetector = "<< ptrFeatureDetector <<endl;
 
-	ptrFeatureDetector->compute(img, kFt,descriptor);
+			ptrFeatureDetector->compute(img, kFt,descriptor);
+			// vector<cv::KeyPoint> FF;
+
+	// ptrFeatureDetector->detect(img, FF);
+	cout<<"now leaving getDescriptorForPt"<<endl;
+
 }
 
 ///

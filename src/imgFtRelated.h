@@ -17,8 +17,9 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 // #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/xfeatures2d/nonfree.hpp"
-
+// #include "opencv2/xfeatures2d/nonfree.hpp"
+#include "opencv2/features2d.hpp"
+#include "opencv2/xfeatures2d.hpp"
 
 #include <vector>
 #include <deque>
@@ -41,7 +42,8 @@ private:
 	std::ofstream ftWriter;
 
 public:
-	cv::xfeatures2d::SiftFeatureDetector* ptrFeatureDetector;
+	cv::Ptr<cv::xfeatures2d::SiftFeatureDetector> ptrFeatureDetector;
+	// cv::xfeatures2d::SiftFeatureDetector* ptrFeatureDetector;
 //	int maxNumFt = 100, int octaveLvl = 3, int contrastTh = 0.1, int edgeTh = 20, int sigma = 2.6
 
 	/*

@@ -26,19 +26,34 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	vctCovFt0L.clear();
 	vctCovFt0R.clear();
 
+	cout<<"before getfeature"<<endl;
+
 	ptrFeature->getFeature(imgL,vctFt0L,des0,1);
+
+	cout<<"after getfeature"<<endl;
 
 	/// Establish key points correspondence in initial stereo pair with KLT tracker
 	ptrFeature->trackFeature(imgL,imgR,vctFt0L,vctFt0R,vctReID,cv::Size(10,10));
 
+	cout<<"A, vctFt0L = "<< vctFt0L.size()<<endl;
 	/// get SIFT descriptor for tracked feature
 	ptrFeature->getDescriptorForPt(imgL,vctFt0L,des0);
+
+	cout<<"B"<<endl;
+
 	ptrFeature->getDescriptorForPt(imgR,vctFt0R,des1);
+
+	cout<<"C"<<endl;
 
 	/// descriptor matching
 	cv::Mat dDes = des1 - des0;
 
+	cout<<"D"<<endl;
+
+
 	std::vector<cv::KeyPoint> vctFt1L, vctFt1R;
+
+	cout<<"E"<<endl;
 
 	for (int i = 0; i < dDes.rows; i++)
 	{
@@ -51,8 +66,13 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 
 	}
 
+	cout<<"F"<<endl;
+
+
 	vctFt0L = vctFt1L;
 	vctFt0R = vctFt1R;
+
+	cout<<"G"<<endl;
 
 	/// descriptor matching for remove false track / outlier
 //	ptrFeature->matchFeature(imgL,imgR,vctFt0L,vctFt0R,Pt0,Pt1,des0,des1);
@@ -60,10 +80,14 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 	arma::mat initCov(2,2);
 	initCov.eye();
 
+	cout<<"H"<<endl;
+
 	int CS = vctFt0L.size();
 
 	vctCovFt0L = std::vector<arma::mat>(CS,initCov);
 	vctCovFt0R = std::vector<arma::mat>(CS,initCov);
+
+	cout<<"I"<<endl;
 
 //	for(int i=0; i<CS; i++)
 //	{
@@ -79,6 +103,8 @@ int featureManager::initFeaturePair(cv::Mat imgL, cv::Mat imgR) {
 
 	imgL.copyTo(imgL0);
 	imgR.copyTo(imgR0);
+
+	cout<<"J"<<endl;
 
 	return CS;
 }
@@ -258,4 +284,3 @@ void featureManager::getFeaturePair(std::vector<cv::KeyPoint>* ptrFtL,
 featureManager::~featureManager() {
 	// TODO Auto-generated destructor stub
 }
-

@@ -10,6 +10,7 @@
 
 #include "armadillo"
 
+
 class dq2omega {
 public:
 	dq2omega();
