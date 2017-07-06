@@ -4,7 +4,8 @@ set (PROJECT_NAME "stereoPoseEKF" CXX)
 project(stereoPoseEKF)
 
 SET (CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS_DISTRIBUTION "-Wall -Wextra -g")
+SET(CMAKE_CXX_FLAGS "-Wall -Wextra -g")
+add_compile_options(-g)
 
 # The version number.
 set (stereoPoseEKF_VERSION_MAJOR 1)
@@ -85,5 +86,6 @@ target_link_libraries( stereoPoseEKF ${OpenCV_LIBS} )
 target_link_libraries (stereoPoseEKF ${Boost_LIBRARIES})
 target_link_libraries (stereoPoseEKF ${ARMADILLO_LIBRARIES})
 
+set(EXECUTABLE_OUTPUT_PATH "../debug")
 
 MESSAGE("object file :" ${mytargets})
